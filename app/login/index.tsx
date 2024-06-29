@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 
 const LoginForm = () => {
@@ -34,12 +35,16 @@ const LoginForm = () => {
         if (email !== user?.email || password !== user?.password) {
           Alert.alert("Error", "Invalid email or password.");
         } else {
-          Alert.alert("Login Successful", `Welcome back, ${user?.first_name + " " + user?.last_name}!`, [
-            {
-              text: "OK",
-              onPress: () => router.push("/"),
-            },
-          ]);
+          Alert.alert(
+            "Login Successful",
+            `Welcome back, ${user?.first_name + " " + user?.last_name}!`,
+            [
+              {
+                text: "OK",
+                onPress: () => router.push("/"),
+              },
+            ]
+          );
         }
       }, 1500);
     } else {
@@ -55,6 +60,7 @@ const LoginForm = () => {
         placeholder="Email"
         value={form.email}
         onChangeText={(value) => handleChange("email", value)}
+        placeholderTextColor="#fff"
         keyboardType="email-address"
       />
       <TextInput
@@ -62,11 +68,16 @@ const LoginForm = () => {
         placeholder="Password"
         value={form.password}
         onChangeText={(value) => handleChange("password", value)}
+        placeholderTextColor="#fff"
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
-      <Link href={"/Register"}>Don't have an account? Register</Link>
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+      <Pressable onPress={handleLogin} style={styles.button}>
+        <Text style={{ color: "#fff" }}>Login</Text>
+      </Pressable>
+      <Link href={"/Register"} style={styles.link}>
+        Don't have an account? Register
+      </Link>
+      {loading && <ActivityIndicator size="large" color="#20B2AA" />}
     </View>
   );
 };
@@ -76,12 +87,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
+    backgroundColor: "#111827",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 16,
     textAlign: "center",
+    color: "#fff",
   },
   input: {
     height: 40,
@@ -89,6 +102,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 12,
     paddingHorizontal: 8,
+    color: "#fff",
+  },
+  link: {
+    color: "#fff",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: "#20B2AA",
+    padding: 8,
+    borderRadius: 4,
+    alignItems: "center",
+    
   },
 });
 

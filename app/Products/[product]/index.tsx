@@ -1,52 +1,76 @@
 import { useCart } from "@/contexts/CartContext";
-import { Link, router } from "expo-router";
-import React from "react";
+import { data } from "@/data/productsData";
+import { Ionicons } from "@expo/vector-icons";
+import { Link, Stack, router, useLocalSearchParams } from "expo-router";
+import React, { useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
   Image,
   StyleSheet,
+  DrawerLayoutAndroid,
+  Button,
+  Pressable,
   TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const Product = ({ product }: any) => {
+const Index = () => {
+  const productId = useLocalSearchParams();
+  const product = data.products.find(
+    (pro) => pro?.id === (productId?.product ? +productId?.product : undefined)
+  );
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    addToCart({ id: product?.id, quantity: 1 });
+    if (product) {
+      addToCart({ id: product?.id, quantity: 1 });
+    }
   };
-
   const handleBuyNow = async () => {
     handleAddToCart();
     router.push("/Checkout");
   };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView>
+    <>
+      <Stack.Screen
+        options={{
+          headerTitle: product?.name,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginRight: 10 }}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </Pressable>
+          ),
+        }}
+      />
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.productContainer}>
-          <Link href={`/Products/${product.id}`}>
-            <Text style={styles.productName}>{product.name}</Text>
-          </Link>
-          <Text style={styles.productPrice}>Price: ${product.price}</Text>
-          <ScrollView
-            horizontal
-            style={styles.imageScrollView}
-            contentContainerStyle={styles.imageContainer}
-            showsHorizontalScrollIndicator={false}
-          >
-            {product.images.map((image: { url: string }, index: number) => (
-              <Image key={index} source={{ uri: image.url }} style={styles.image} />
-            ))}
+          <Text style={styles.productName}>{product?.name}</Text>
+          <Text style={styles.productPrice}>Price: ${product?.price}</Text>
+          <ScrollView horizontal style={styles.imageScrollView}>
+            {product?.images.map(
+              (image: { url: any }, index: React.Key | null | undefined) => (
+                <Image
+                  key={index}
+                  source={{ uri: image.url }}
+                  style={styles.image}
+                />
+              )
+            )}
           </ScrollView>
-          <Text style={styles.productCategory}>Category: {product.category}</Text>
+          <Text style={styles.productCategory}>
+            Category: {product?.category}
+          </Text>
           <Text style={styles.productAbout}>About:</Text>
           <View style={styles.aboutContainer}>
             {Object.entries(product?.about ?? {}).map(([key, value]) => (
               <View key={key}>
-                {typeof value === "object" && value !== null ? (
+                {typeof value === "object" ? (
                   <>
                     <Text style={styles.productAbout}>{key}:</Text>
                     <View style={styles.subAboutContainer}>
@@ -65,35 +89,43 @@ const Product = ({ product }: any) => {
               </View>
             ))}
           </View>
+
           <Text style={styles.productAboutThisItem}>About This Item:</Text>
           <View style={styles.aboutThisItemContainer}>
-            {product.aboutthisitem.map((item: { point: string }, index: number) => (
-              <Text key={index} style={styles.aboutThisItemText}>
-                {`\u2022 ${item.point}`}
-              </Text>
-            ))}
+            {product?.aboutthisitem.map(
+              (item: { point: any }, index: React.Key | null | undefined) => (
+                <Text key={index} style={styles.aboutThisItemText}>
+                  {`\u2022 ${item.point}`}
+                </Text>
+              )
+            )}
           </View>
         </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
-            <Text style={styles.buttonText}>Buy Now</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-            <Text style={styles.buttonText}>Add to Cart</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
-    </SafeAreaView>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
+          <Text style={styles.buttonText}>Buy Now</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addToCartButton}
+          onPress={handleAddToCart}
+        >
+          <Text style={styles.buttonText}>Add to Cart</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
+  scrollViewContent: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    backgroundColor: "#111827",
   },
   productContainer: {
     padding: 10,
-    flex: 1,
   },
   productName: {
     fontSize: 20,
@@ -107,11 +139,6 @@ const styles = StyleSheet.create({
   imageScrollView: {
     marginTop: 10,
     marginBottom: 10,
-    height: 160,
-  },
-  imageContainer: {
-    flexDirection: "row",
-    alignItems: "center",
   },
   image: {
     width: 150,
@@ -162,12 +189,26 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginVertical: 10,
   },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+  },
+  navigationContainer: {
+    backgroundColor: "#fff",
+  },
+  paragraph: {
+    padding: 16,
+    fontSize: 15,
+    textAlign: "center",
+  },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
     paddingHorizontal: 10,
-    marginBottom: 50,
+    backgroundColor: "#111827",
+    paddingVertical: 10,
   },
   buyNowButton: {
     flex: 1,
@@ -193,4 +234,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Product;
+export default Index;
