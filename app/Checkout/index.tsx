@@ -1,121 +1,231 @@
-import { colors } from "@/constants/theme";
-import { categories } from "@/data/categories";
-import { Link } from "expo-router";
-import { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
+  View,
+  Text,
+  ScrollView,
   Image,
   StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Pressable,
   TextInput,
+  Button,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, router } from "expo-router";
+import { useCart } from "@/contexts/CartContext";
+import { data } from "@/data/productsData";
+import UserContext from "@/contexts/AuthContext";
 
-export default function Index() {
-  const [textSearch, setTextSearch] = useState("");
-  const [shownCategories, setShownCategories] = useState(categories);
+const Checkout = () => {
+  const { cart, clearCart } = useCart();
+  const [shippingInfo, setShippingInfo] = useState({
+    name: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: "",
+  });
 
-  const searchHandler = (category: string) => {
-    setTextSearch(category);
+  // Map cart items with product details
+  const cartProducts = cart.map((cartItem) => {
+    const product = data?.products.find((p) => p.id === cartItem.id);
+    return { ...product, quantity: cartItem.quantity };
+  });
+
+  const handleInputChange = (name, value) => {
+    setShippingInfo({
+      ...shippingInfo,
+      [name]: value,
+    });
   };
 
-  useEffect(() => {
-    const filterdCategories = () => {
-      const filterd = categories.filter((cat) =>
-        cat.name.toLowerCase().includes(textSearch.toLowerCase())
-      );
-      setShownCategories(filterd);
-    };
-    filterdCategories();
-  }, [textSearch]);
+  const { user } = useContext(UserContext);
+
+  const handlePlaceOrder = () => {
+    if (!user) {
+      router.replace("/login");
+    } else {
+      Alert.alert("Order placed successfully!");
+      clearCart();
+      router.push("/");
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.textInput}
-        placeholder="Search for a category"
-        onChangeText={searchHandler}
-        value={textSearch}
-        placeholderTextColor="#888"
+    <>
+      <Stack.Screen
+        options={{
+          headerTitle: "Checkout",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginRight: 10 }}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
+        }}
       />
-
-      <Text>Checkout</Text>
-      {/* <ScrollView
-        contentContainerStyle={styles.scrollViewContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {shownCategories.map((category) => (
-          <Link key={category.id} href={category.link} asChild>
-            <Pressable style={styles.categoryButton}>
-              <View style={styles.categoryContent}>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: category.image }}
-                    style={styles.image}
-                    resizeMode="cover"
-                  />
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {cartProducts.length > 0 ? (
+          <>
+            <View style={styles.cartSummary}>
+              <Text style={styles.sectionTitle}>Order Summary</Text>
+              {cartProducts.map((product) => (
+                <View style={styles.productContainer} key={product.id}>
+                  <Text style={styles.productName}>{product.name}</Text>
+                  <Text style={styles.productPrice}>
+                    Price: ${product.price}
+                  </Text>
+                  <Text style={styles.productQuantity}>
+                    Quantity: {product.quantity}
+                  </Text>
+                  <ScrollView horizontal style={styles.imageScrollView}>
+                    {product.images.map((image, index) => (
+                      <Image
+                        key={index}
+                        source={{ uri: image.url }}
+                        style={styles.image}
+                      />
+                    ))}
+                  </ScrollView>
                 </View>
-                <Text style={styles.text}>{category.name}</Text>
-              </View>
-            </Pressable>
-          </Link>
-        ))}
-      </ScrollView> */}
-    </View>
+              ))}
+            </View>
+            <View style={styles.shippingInfo}>
+              <Text style={styles.sectionTitle}>Shipping Information</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={shippingInfo.name}
+                onChangeText={(value) => handleInputChange("name", value)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Address"
+                value={shippingInfo.address}
+                onChangeText={(value) => handleInputChange("address", value)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                value={shippingInfo.city}
+                onChangeText={(value) => handleInputChange("city", value)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Postal Code"
+                value={shippingInfo.postalCode}
+                onChangeText={(value) => handleInputChange("postalCode", value)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Country"
+                value={shippingInfo.country}
+                onChangeText={(value) => handleInputChange("country", value)}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.placeOrderButton}
+              onPress={handlePlaceOrder}
+            >
+              <Text style={styles.buttonText}>Place Order</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <View style={styles.emptyCartContainer}>
+            <Text style={styles.emptyCartText}>Your cart is empty</Text>
+          </View>
+        )}
+      </ScrollView>
+    </>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    padding: 20,
-  },
   scrollViewContent: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-around",
+    flexDirection: "column",
+    padding: 20,
+    backgroundColor: "#111827",
+    flexGrow: 1,
   },
-  categoryButton: {
-    width: "48%",
-    marginVertical: 10,
-    borderRadius: 15,
-    backgroundColor: colors.white,
-    overflow: "hidden",
-    elevation: 3, // Adds shadow for Android
-    shadowColor: "#000", // Adds shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  cartSummary: {
+    marginBottom: 20,
   },
-  categoryContent: {
-    alignItems: "center",
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
   },
-  imageContainer: {
-    width: "100%",
-    height: 150,
-    padding: 5,
+  productContainer: {
+    padding: 10,
+    backgroundColor: "#1F2937",
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  productName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+  },
+  productPrice: {
+    fontSize: 16,
+    color: "#fff",
+    marginBottom: 10,
+  },
+  productQuantity: {
+    fontSize: 16,
+    color: "#fff",
+    marginBottom: 10,
+  },
+  imageScrollView: {
+    marginBottom: 10,
   },
   image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 15,
-  },
-  text: {
-    padding: 10,
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    // color: colors.primary,
-  },
-  textInput: {
-    backgroundColor: "#ffffff",
-    padding: 15,
+    width: 150,
+    height: 150,
+    marginRight: 10,
     borderRadius: 10,
-    fontSize: 18,
+    resizeMode: "contain",
+  },
+  shippingInfo: {
     marginBottom: 20,
-    borderColor: "#ddd",
+  },
+  input: {
+    height: 40,
+    borderColor: "#ccc",
     borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#fff",
+  },
+  placeOrderButton: {
+    backgroundColor: "#FF6347",
+    paddingVertical: 15,
+    borderRadius: 5,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  emptyCartContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#1F2937",
+    borderRadius: 10,
+  },
+  emptyCartText: {
+    fontSize: 18,
+    color: "#fff",
   },
 });
+
+export default Checkout;

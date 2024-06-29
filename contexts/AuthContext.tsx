@@ -5,6 +5,7 @@ type User = {
   last_name?: string;
   email?: string;
   password?: string;
+  image?:string 
 } | null;
 
 type UserContextType = {
@@ -32,7 +33,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
-  console.log(user);
+  // console.log(user);
 
   return (
     <UserContext.Provider value={{ user, loginHandler, logoutHandler }}>

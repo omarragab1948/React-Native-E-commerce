@@ -1,7 +1,8 @@
 import { colors } from "@/constants/theme";
 import UserContext from "@/contexts/AuthContext";
 import { categories } from "@/data/categories";
-import { Link } from "expo-router";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { Link, Stack, router } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
   Image,
@@ -14,6 +15,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function Home() {
   const [textSearch, setTextSearch] = useState("");
@@ -41,48 +43,79 @@ export default function Home() {
   }, [textSearch]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Search for a category"
-          onChangeText={searchHandler}
-          value={textSearch}
-          placeholderTextColor="#888"
-        />
-
-        {loader && <ActivityIndicator size="large" color={"red"} />}
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {shownCategories?.length > 0 && !loader
-            ? shownCategories.map((category) => (
-                <Link
-                  key={`/categories/${category.id}`}
-                  href={category.link}
-                  asChild
-                >
-                  <Pressable style={styles.categoryButton}>
-                    <View style={styles.categoryContent}>
-                      <View style={styles.imageContainer}>
-                        <Image
-                          source={{ uri: category.image }}
-                          style={styles.image}
-                          resizeMode="cover"
-                        />
-                      </View>
-                      <Text style={styles.text}>{category.name}</Text>
-                    </View>
-                  </Pressable>
-                </Link>
-              ))
-            : !loader && (
-                <Text style={styles.notFound}>No categories found</Text>
+    <>
+      <Stack.Screen
+        options={{
+          headerTitle: "Home",
+          headerStyle: {
+            backgroundColor: "#20B2AA",
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/Profile");
+              }}
+              style={{ marginRight: 10 }}
+            >
+              {user ? (
+                  <Image
+                    source={{ uri: user?.image }}
+                    style={{ width: 50, height: 50, borderRadius: 5000  }}
+                  />
+              ) : (
+                <FontAwesome5 name="user-circle" size={24} color="#fff" />
               )}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Search for a category"
+            onChangeText={searchHandler}
+            value={textSearch}
+            placeholderTextColor="#888"
+          />
+
+          {loader && <ActivityIndicator size="large" color={"#20B2AA"} />}
+          <ScrollView
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {shownCategories?.length > 0 && !loader
+              ? shownCategories.map((category) => (
+                  <Link
+                    key={`/categories${category.link}`}
+                    href={`${category.link}`}
+                    asChild
+                  >
+                    <Pressable style={styles.categoryButton}>
+                      <View style={styles.categoryContent}>
+                        <View style={styles.imageContainer}>
+                          <Image
+                            source={{ uri: category.image }}
+                            style={styles.image}
+                            resizeMode="contain"
+                          />
+                        </View>
+                        <Text style={styles.text}>{category.name}</Text>
+                      </View>
+                    </Pressable>
+                  </Link>
+                ))
+              : !loader && (
+                  <Text style={styles.notFound}>No categories found</Text>
+                )}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    </>
   );
 }
 
